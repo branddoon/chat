@@ -1,13 +1,18 @@
 import React from 'react';
-import {horaMes} from '../helpers/horaMes';
+import { formatDate } from '../helpers/horaMes';
 
-export const OutgoingMessage = ({msg}) => {
+/**
+ * Renders a single message sent by the current user.
+ *
+ * @param {{ msg: { message: string, createdAt: string } }} props
+ */
+export const OutgoingMessage = ({ msg }) => {
     return (
         <div className="outgoing_msg">
             <div className="sent_msg">
-                <p>{msg.mensaje}</p>
-                <span className="time_date"> { horaMes(msg.createdAt)}</span>
+                <p>{msg.message}</p>
+                <span className="time_date">{formatDate(msg.createdAt)}</span>
             </div>
         </div>
-    )
-}
+    );
+};

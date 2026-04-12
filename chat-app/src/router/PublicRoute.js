@@ -1,17 +1,11 @@
-import React from 'react';
-import {
-    Route,
-    Redirect
-  } from 'react-router-dom';
-  
-  
-export const PublicRoute = ({ isAuthenticated, component:Component }) => {
-    return (
-        <Route component={(props) =>{
-                console.log(isAuthenticated);
-                console.log(props); 
-                return(!isAuthenticated) 
-                ? <Component {...props}/>
-                : <Redirect to="/"/>
-            }}/>)    
-    }
+import { Navigate } from 'react-router-dom';
+
+/**
+ * Renders children when the user is NOT authenticated,
+ * otherwise redirects authenticated users to the home page.
+ *
+ * @param {{ isAuthenticated: boolean, children: React.ReactNode }} props
+ */
+export const PublicRoute = ({ isAuthenticated, children }) => {
+    return !isAuthenticated ? children : <Navigate to="/" replace />;
+};

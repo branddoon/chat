@@ -1,20 +1,25 @@
-import {animateScroll} from 'react-scroll';
+import { animateScroll } from 'react-scroll';
 
-export const scrollToBottom = (id)=>{
-    animateScroll.scrollToBottom(
-        {
-            containerId:id,
-            duration:0
-        });
+/**
+ * Instantly scrolls to the bottom of a scrollable container.
+ *
+ * @param {string} id - The DOM id of the container element.
+ */
+export const scrollToBottom = (id) => {
+    animateScroll.scrollToBottom({
+        containerId: id,
+        duration: 0,
+    });
+};
 
-}
-
-
-export const scrollToBottomAnimated = (id)=>{
-    animateScroll.scrollToBottom(
-        {
-            containerId:id,
-            duration:250
-        });
-
-}
+/**
+ * Smoothly animates a scroll to the bottom of a scrollable container.
+ *
+ * @param {string} id - The DOM id of the container element.
+ */
+export const scrollToBottomAnimated = (id) => {
+    animateScroll.scrollToBottom({
+        containerId: id,
+        duration: 250,
+    });
+};

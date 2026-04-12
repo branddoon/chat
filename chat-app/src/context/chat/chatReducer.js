@@ -1,43 +1,62 @@
-import { types } from "../../types/types";
+import { types } from '../../types/types';
 
-export const chatReducer =(state,action)=>{
-    switch(action.type){
-        case types.usuariosCargados:
+/**
+ * Pure reducer function for the chat state.
+ * Handles user list updates, active chat selection,
+ * incoming messages, loading chat history, and session cleanup.
+ *
+ * @param {object} state  - Current chat state.
+ * @param {object} action - Dispatched action with type and optional payload.
+ * @returns {object} Next chat state.
+ */
+export const chatReducer = (state, action) => {
+    switch (action.type) {
+
+        // Replace the full user list with the latest snapshot from the server.
+        case types.usersLoaded:
             return {
                 ...state,
-                usuarios:[...action.payload]
-            }
-        case types.activarChat:
-            if (state.chatActivo === action.payload) return state;
+                users: [...action.payload],
+            };
+
+        // Set the active conversation target; skip update if already active.
+        case types.activateChat:
+            if (state.activeChat === action.payload) return state;
             return {
                 ...state,
-                chatActivo:action.payload
-            }
-        case types.nuevoMensaje:
-            if(state.chatActivo === action.payload.de 
-                || state.chatActivo === action.payload.para){
+                activeChat: action.payload,
+            };
+
+        // Append an incoming message only if it belongs to the active conversation.
+        case types.newMessage:
+            if (
+                state.activeChat === action.payload.from ||
+                state.activeChat === action.payload.to
+            ) {
                 return {
                     ...state,
-                    mensajes:[...state.mensajes,action.payload]
-                }
-            }else{
-                return state;
-            } 
-        case types.cargarMensajes:
+                    messages: [...state.messages, action.payload],
+                };
+            }
+            return state;
+
+        // Replace the message list with a freshly fetched history.
+        case types.loadMessages:
             return {
                 ...state,
-                mensajes: [...action.payload]
-            }
-        case types.cerrarSesion:
+                messages: [...action.payload],
+            };
+
+        // Reset all chat state on logout.
+        case types.closeSession:
             return {
-                uid:'',
-                chatActivo: null,
-                usuarios:[],
-                mensajes:[]
-            }
+                uid:        '',
+                activeChat: null,
+                users:      [],
+                messages:   [],
+            };
 
         default:
             return state;
     }
-
-}
+};

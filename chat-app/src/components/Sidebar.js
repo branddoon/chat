@@ -1,41 +1,30 @@
-import React,{useContext} from 'react';
+import React, { useContext } from 'react';
+import { ChatContext }    from '../context/chat/ChatContext';
+import { AuthContext }    from '../auth/AuthContext';
 import { SidebarChatItem } from './SidebarChatItem';
-import {ChatContext} from '../context/chat/ChatContext';
-import {AuthContext} from '../auth/AuthContext';
 
+/**
+ * Scrollable list of all users except the currently logged-in user.
+ * Each item is clickable and opens that user's conversation.
+ */
 export const Sidebar = () => {
+    const { chatState } = useContext(ChatContext);
+    const { auth }      = useContext(AuthContext);
 
-   const {chatState} = useContext(ChatContext);
-   const {auth} = useContext(AuthContext);
-   const {uid} =auth;
- 
-   
     return (
-      
-      <div className="inbox_chat">
+        <div className="inbox_chat">
 
-      {/* <!-- conversación activa inicio --> */}
-        {
-              chatState.usuarios
-              .filter(usuario=>usuario.uid!==uid)
-              .map((usuario)=>{
-                return <SidebarChatItem
-                key={usuario.uid} 
-                usuario={usuario}
-                />
-               })
-        }
-        
-      {/* <!-- conversación activa Fin --> */}
+            {/* Render one chat item per user, excluding ourselves */}
+            {chatState.users
+                .filter((user) => user.uid !== auth.uid)
+                .map((user) => (
+                    <SidebarChatItem key={user.uid} user={user} />
+                ))
+            }
 
+            {/* Extra space at the bottom so the last item isn't cut off */}
+            <div className="extra_space" />
 
-
-      {/* <!-- Espacio extra para scroll --> */}
-      <div className="extra_space"></div>
-
-
-  </div>
-
-
-    )
-}
+        </div>
+    );
+};

@@ -1,21 +1,11 @@
-import React from 'react';
-import {
-    Route,
-    Redirect
-  } from 'react-router-dom';
-  
-export const PrivateRoute = ({
-    isAuthenticated,
-    component:Component
-}) => {
-    return (        
-        <Route 
-            component={(props) =>{
-                console.log('llego');
-                console.log(props);
-                return(isAuthenticated) ? <Component {...props}/>
-                : <Redirect to="/auth"/>
-            }}
-        />
-    )
-}
+import { Navigate } from 'react-router-dom';
+
+/**
+ * Renders children when the user is authenticated,
+ * otherwise redirects to the /auth page.
+ *
+ * @param {{ isAuthenticated: boolean, children: React.ReactNode }} props
+ */
+export const PrivateRoute = ({ isAuthenticated, children }) => {
+    return isAuthenticated ? children : <Navigate to="/auth" replace />;
+};

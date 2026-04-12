@@ -1,10 +1,8 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import ReactDOM from 'react-dom/client';
 import './index.css';
-import {ChatApp} from './ChatApp';
+import { ChatApp } from './ChatApp';
 
-ReactDOM.render(
-    <ChatApp />,
-  document.getElementById('root')
-);
-
+/** Mount the React app into the #root DOM element. */
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<ChatApp />);
