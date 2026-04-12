@@ -1,0 +1,23 @@
+server:
+  port: 8080
+
+spring:
+  data:
+    mongodb:
+      uri:
+        mongodb: //127.0.0.1:27017/chatdb
+
+jwt:
+  key: SecretKey2f1da39bd7d94a418d0c2f3b8399a6cfSystemBloga8648fc460774d1a9e1876bacc438142Last0119cbf26eae4e11b5504072d63d4ce2
+
+socketio:
+  port: 9092
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
+    com.chat: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
