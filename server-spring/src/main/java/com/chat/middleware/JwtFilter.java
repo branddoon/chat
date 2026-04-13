@@ -3,6 +3,7 @@ package com.chat.middleware;
 import com.chat.helpers.JwtHelper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 
 /**
@@ -37,8 +39,14 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Extracts the {@code x-token} header, validates the JWT, and populates
-     * the Spring Security context with the authenticated user's ID.
+     * Resolves the JWT from the request using the following priority:
+     * <ol>
+     *   <li>{@code access_token} HttpOnly cookie (browser HTTP requests)</li>
+     *   <li>{@code x-token} header (Socket.IO handshake and direct API calls)</li>
+     * </ol>
+     * When a valid token is found, the authenticated user's ID is stored in the
+     * Spring Security context so that downstream handlers can access it via
+     * {@link org.springframework.security.core.Authentication#getPrincipal()}.
      *
      * @param request     the incoming HTTP request
      * @param response    the outgoing HTTP response
@@ -52,7 +60,7 @@ public class JwtFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        String token = request.getHeader("x-token");
+        String token = resolveToken(request);
 
         if (token != null && !token.isBlank()) {
             try {
@@ -66,5 +74,25 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    /**
+     * Reads the JWT from the {@code access_token} HttpOnly cookie first.
+     * Falls back to the {@code x-token} request header if the cookie is absent.
+     *
+     * @param request the incoming HTTP request
+     * @return the raw JWT string, or {@code null} if neither source contains a token
+     */
+    private String resolveToken(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            return Arrays.stream(cookies)
+                    .filter(c -> "access_token".equals(c.getName()))
+                    .map(Cookie::getValue)
+                    .filter(v -> v != null && !v.isBlank())
+                    .findFirst()
+                    .orElse(request.getHeader("x-token"));
+        }
+        return request.getHeader("x-token");
     }
 }

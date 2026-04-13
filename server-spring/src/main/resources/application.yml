@@ -13,6 +13,11 @@ jwt:
 socketio:
   port: 9092
 
+app:
+  cookie:
+    # Set to true in production (requires HTTPS). Use false for local HTTP development.
+    secure: false
+
 logging:
   level:
     org.springframework.security: DEBUG

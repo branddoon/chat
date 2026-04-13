@@ -50,8 +50,8 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Public routes: login and registration do not require a token.
-                .requestMatchers("/api/login", "/api/login/new").permitAll()
+                // Public routes: login, registration, and logout do not require a token.
+                .requestMatchers("/api/login", "/api/login/new", "/api/login/logout").permitAll()
                 // All other routes require a valid JWT (enforced by JwtFilter).
                 .anyRequest().authenticated()
             )
