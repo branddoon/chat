@@ -1,37 +1,37 @@
 # chat-app
 
-Frontend del chat en tiempo real. SPA construida con React 18 que se comunica con el servidor via REST y Socket.IO.
+Frontend of the real-time chat application. A Single Page Application built with React 18 that communicates with the server via REST and Socket.IO.
 
 ## Stack
 
-| Tecnología | Versión |
+| Technology | Version |
 |---|---|
 | Node.js | 22+ |
 | React | 18.3 |
 | React Router | 6.28 |
-| Socket.IO client | 4.8 |
+| Socket.IO Client | 4.8 |
 | Create React App | 5.0 |
 
-## Requisitos previos
+## Prerequisites
 
 - Node.js 22+
-- El servidor (`server-spring`) corriendo en `localhost:8080` y `localhost:9092`
+- The backend (`server-spring`) running on `localhost:8080` and `localhost:9092`
 
-## Configuración
+## Configuration
 
-Crea un archivo `.env.development` en la raíz de `chat-app/` (ya incluido en el repo):
+Create a `.env.development` file in the root of `chat-app/` (already included in the repo):
 
 ```env
 REACT_APP_API_URL=http://localhost:8080/api
 ```
 
-Para producción crea `.env.production` con la URL real del servidor:
+For production, create `.env.production` with the real server URL:
 
 ```env
-REACT_APP_API_URL=https://tu-servidor.com/api
+REACT_APP_API_URL=https://your-server.com/api
 ```
 
-## Ejecutar en desarrollo
+## Running in Development
 
 ```bash
 cd chat-app/
@@ -39,73 +39,73 @@ npm install
 npm start
 ```
 
-La app queda disponible en `http://localhost:3000`.
+The app will be available at `http://localhost:3000`.
 
-### Desde VS Code
+### From VS Code
 
-Abre la carpeta `chat-app/` en VS Code y presiona **F5**. La configuración en `.vscode/launch.json` levanta el servidor de desarrollo automáticamente y abre Chrome con el debugger conectado. Los breakpoints en archivos `.js` de `src/` funcionan directamente.
+Open the `chat-app/` folder in VS Code and press **F5**. The configuration in `.vscode/launch.json` starts the dev server automatically and opens Chrome with the debugger attached. Breakpoints in `.js` files under `src/` work out of the box.
 
-## Build de producción
+## Production Build
 
 ```bash
 npm run build
 ```
 
-Genera la carpeta `build/` con los archivos estáticos listos para servir.
+Generates the `build/` folder with static files ready to be served.
 
-## Seguridad — manejo del JWT
+## Security — JWT Handling
 
-El token JWT **nunca se escribe en `localStorage`**. El flujo es:
+The JWT token is **never written to `localStorage`**. The flow is:
 
-| Capa | Mecanismo |
+| Layer | Mechanism |
 |---|---|
-| Peticiones HTTP | Cookie `HttpOnly; SameSite=Strict` establecida por el servidor; el navegador la adjunta automáticamente con `credentials: 'include'`. JavaScript no puede leerla. |
-| Socket.IO | El JWT se guarda únicamente en el estado en memoria de `AuthContext` (`auth.token`) y se pasa como query param `x-token` solo en el handshake inicial. El servidor Socket.IO corre en un puerto distinto, por lo que las cookies no viajan allí. |
+| HTTP requests | `HttpOnly; SameSite=Strict` cookie set by the server; the browser attaches it automatically with `credentials: 'include'`. JavaScript cannot read it. |
+| Socket.IO | The JWT is stored only in the in-memory state of `AuthContext` (`auth.token`) and passed as the `x-token` query param solely during the initial handshake. The Socket.IO server runs on a different port, so cookies do not travel there. |
 
-## Arquitectura
+## Architecture
 
-### Árbol de proveedores
+### Provider Tree
 
 ```
-<ChatProvider>        ← estado del chat (usuarios, mensajes, chat activo)
-  <AuthProvider>      ← estado de autenticación (uid, nombre, token en memoria)
-    <SocketProvider>  ← conexión Socket.IO reactiva al estado de auth
-      <AppRouter>     ← rutas públicas / privadas
+<ChatProvider>        ← chat state (users, messages, active chat)
+  <AuthProvider>      ← auth state (uid, name, in-memory token)
+    <SocketProvider>  ← Socket.IO connection reactive to auth state
+      <AppRouter>     ← public / private routes
 ```
 
-### Rutas
+### Routes
 
-| Ruta | Acceso | Componente |
+| Route | Access | Component |
 |---|---|---|
-| `/auth/login` | Público | `LoginPage` |
-| `/auth/register` | Público | `RegisterPage` |
-| `/*` | Privado | `ChatPage` |
+| `/auth/login` | Public | `LoginPage` |
+| `/auth/register` | Public | `RegisterPage` |
+| `/*` | Private | `ChatPage` |
 
-Las rutas privadas redirigen a `/auth` si el usuario no está autenticado. Las rutas públicas redirigen a `/` si ya lo está.
+Private routes redirect to `/auth` if the user is not authenticated. Public routes redirect to `/` if they already are.
 
-### Flujo de autenticación
+### Authentication Flow
 
-1. **Carga inicial** — `AppRouter` llama a `verifyToken()`. Se hace `GET /api/login/renew` con la cookie; si es válida se restaura la sesión, si no se muestra el login.
-2. **Login / Registro** — `POST /api/login` o `/api/login/new`. El servidor responde con los datos del usuario y establece la cookie. El token también se guarda en `auth.token` (solo en memoria) para el socket.
-3. **Logout** — `POST /api/login/logout` para que el servidor expire la cookie. El estado local se limpia y el socket se desconecta.
+1. **Initial load** — `AppRouter` calls `verifyToken()`. It sends `GET /api/login/renew` with the cookie; if valid the session is restored, otherwise the login screen is shown.
+2. **Login / Register** — `POST /api/login` or `/api/login/new`. The server responds with the user data and sets the cookie. The token is also stored in `auth.token` (in memory only) for the socket handshake.
+3. **Logout** — `POST /api/login/logout` so the server expires the cookie. Local state is cleared and the socket disconnects.
 
-### Conexión Socket.IO
+### Socket.IO Connection
 
-`SocketProvider` observa `auth.logged`:
+`SocketProvider` watches `auth.logged`:
 
-- Cuando pasa a `true` → llama `connectSocket()` con `auth.token` como query param.
-- Cuando pasa a `false` → llama `disconnectSocket()`.
+- When it becomes `true` → calls `connectSocket()` with `auth.token` as the query param.
+- When it becomes `false` → calls `disconnectSocket()`.
 
-Eventos escuchados:
+Events listened to:
 
-| Evento | Acción |
+| Event | Action |
 |---|---|
-| `user-list` | Actualiza la lista de usuarios en `ChatContext` |
-| `personal-message` | Agrega el mensaje al historial activo y hace scroll al final |
+| `user-list` | Updates the user list in `ChatContext` |
+| `personal-message` | Appends the message to the active history and scrolls to the bottom |
 
-### Estado global
+### Global State
 
-**`AuthContext`** — autenticación:
+**`AuthContext`** — authentication:
 ```js
 { uid, checking, logged, name, email, token }
 ```
@@ -115,40 +115,40 @@ Eventos escuchados:
 { uid, activeChat, users, messages }
 ```
 
-## Estructura del proyecto
+## Project Structure
 
 ```
 src/
 ├── auth/
-│   └── AuthContext.js        # Proveedor de autenticación + acciones login/register/logout
+│   └── AuthContext.js        # Auth provider + login/register/logout actions
 ├── context/
 │   ├── chat/
-│   │   ├── ChatContext.js    # Proveedor del estado del chat
+│   │   ├── ChatContext.js    # Chat state provider
 │   │   └── chatReducer.js    # Reducer: usersLoaded, activateChat, newMessage, loadMessages, closeSession
-│   └── SocketContext.js      # Gestión del ciclo de vida de Socket.IO
+│   └── SocketContext.js      # Socket.IO lifecycle management
 ├── helpers/
 │   ├── fetch.js              # fetchWithToken / fetchWithoutToken (credentials: include)
-│   ├── horaMes.js            # Formateo de fechas
-│   └── scrollToBottom.js     # Scroll animado al último mensaje
+│   ├── horaMes.js            # Date formatting
+│   └── scrollToBottom.js     # Animated scroll to the last message
 ├── hooks/
-│   └── useSocket.js          # Hook de conexión Socket.IO (recibe token como parámetro)
+│   └── useSocket.js          # Socket.IO connection hook (receives token as parameter)
 ├── pages/
 │   ├── ChatPage.js
 │   ├── LoginPage.js
 │   └── RegisterPage.js
 ├── components/
-│   ├── InboxPeople.js        # Panel lateral de usuarios
-│   ├── SidebarChatItem.js    # Ítem individual de conversación
-│   ├── SearchBox.js          # Búsqueda de usuarios
-│   ├── Messages.js           # Lista de mensajes del chat activo
+│   ├── InboxPeople.js        # User list panel
+│   ├── SidebarChatItem.js    # Individual conversation item
+│   ├── SearchBox.js          # User search
+│   ├── Messages.js           # Message list for the active chat
 │   ├── IncomingMessage.js
 │   ├── OutgoingMessage.js
-│   └── SendMessage.js        # Input de envío
+│   └── SendMessage.js        # Message input
 ├── router/
-│   ├── AppRouter.js          # Router raíz con verificación de token
-│   ├── AuthRouter.js         # Rutas públicas (login / register)
-│   ├── PrivateRoute.js       # Guard de rutas autenticadas
-│   └── PublicRoute.js        # Guard de rutas públicas
+│   ├── AppRouter.js          # Root router with token verification
+│   ├── AuthRouter.js         # Public routes (login / register)
+│   ├── PrivateRoute.js       # Authenticated route guard
+│   └── PublicRoute.js        # Public route guard
 └── types/
-    └── types.js              # Constantes de action types del reducer
+    └── types.js              # Reducer action type constants
 ```

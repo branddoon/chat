@@ -1,76 +1,76 @@
 # chat-server
 
-Backend del chat en tiempo real. Expone una API REST para autenticación e historial de mensajes, y un servidor Socket.IO para mensajería en tiempo real.
+Backend of the real-time chat application. Exposes a REST API for authentication and message history, and a Socket.IO server for real-time messaging.
 
 ## Stack
 
-| Tecnología | Versión |
+| Technology | Version |
 |---|---|
 | Java | 17 |
 | Spring Boot | 3.2.4 |
-| Spring Security | (incluido en Boot) |
-| Spring Data MongoDB | (incluido en Boot) |
+| Spring Security | (included in Boot) |
+| Spring Data MongoDB | (included in Boot) |
 | netty-socketio | 2.0.6 |
 | jjwt | 0.12.5 |
-| Lombok | (opcional en runtime) |
+| Lombok | (optional at runtime) |
 
-## Requisitos previos
+## Prerequisites
 
 - JDK 17+
 - Maven 3.8+
-- MongoDB corriendo en `localhost:27017`
+- MongoDB running on `localhost:27017`
 
-## Configuración
+## Configuration
 
-Edita `src/main/resources/application.yml`:
+Edit `src/main/resources/application.yml`:
 
 ```yaml
 spring:
   data:
     mongodb:
-      uri: mongodb://127.0.0.1:27017/chatdb   # URI de tu instancia MongoDB
+      uri: mongodb://127.0.0.1:27017/chatdb   # URI of your MongoDB instance
 
 jwt:
-  key: <clave-secreta-minimo-256-bits>        # Cambia esto en producción
+  key: <secret-key-minimum-256-bits>          # Change this in production
 
 socketio:
-  port: 9092                                  # Puerto del servidor Socket.IO
+  port: 9092                                  # Socket.IO server port
 
 app:
   cookie:
-    secure: false   # false para desarrollo HTTP local; true en producción (HTTPS)
+    secure: false   # false for local HTTP development; true in production (HTTPS)
 ```
 
-> **Producción:** establece `app.cookie.secure: true` y usa una clave JWT larga generada aleatoriamente. Nunca subas `application.yml` con secretos reales al repositorio.
+> **Production:** set `app.cookie.secure: true` and use a long randomly generated JWT key. Never commit `application.yml` with real secrets to the repository.
 
-## Ejecutar
+## Running
 
 ```bash
-# Desde la carpeta server-spring/
+# From the server-spring/ folder
 mvn spring-boot:run
 ```
 
-O genera el JAR y ejecútalo directamente:
+Or build the JAR and run it directly:
 
 ```bash
 mvn clean package -DskipTests
 java -jar target/chat-server-1.0.0.jar
 ```
 
-El servidor REST queda disponible en `http://localhost:8080`.
+The REST server will be available at `http://localhost:8080`.
 
-## API REST
+## REST API
 
-Todos los endpoints llevan el prefijo `/api`.
+All endpoints are prefixed with `/api`.
 
-### Autenticación
+### Authentication
 
-| Método | Ruta | Auth | Descripción |
+| Method | Route | Auth | Description |
 |---|---|---|---|
-| `POST` | `/api/login/new` | No | Registrar nuevo usuario |
-| `POST` | `/api/login` | No | Iniciar sesión |
-| `GET` | `/api/login/renew` | Cookie | Renovar sesión activa |
-| `POST` | `/api/login/logout` | No | Cerrar sesión (expira la cookie) |
+| `POST` | `/api/login/new` | No | Register a new user |
+| `POST` | `/api/login` | No | Log in |
+| `GET` | `/api/login/renew` | Cookie | Renew an active session |
+| `POST` | `/api/login/logout` | No | Log out (expires the cookie) |
 
 **POST `/api/login/new`**
 ```json
@@ -80,7 +80,7 @@ Todos los endpoints llevan el prefijo `/api`.
 // Response 200
 { "ok": true, "id": "...", "name": "Brandon", "email": "brandon@mail.com", "token": "..." }
 
-// Response 400 — email ya registrado
+// Response 400 — email already registered
 { "ok": false, "msg": "The email already exists. Please use a different email." }
 ```
 
@@ -96,13 +96,13 @@ Todos los endpoints llevan el prefijo `/api`.
 { "ok": false, "msg": "Email or password not found." }
 ```
 
-En login y registro exitosos el servidor establece la cookie `access_token` con los flags `HttpOnly; SameSite=Strict; Path=/; Max-Age=28800`.
+On a successful login or registration the server sets the `access_token` cookie with the flags `HttpOnly; SameSite=Strict; Path=/; Max-Age=28800`.
 
-### Mensajes
+### Messages
 
-| Método | Ruta | Auth | Descripción |
+| Method | Route | Auth | Description |
 |---|---|---|---|
-| `GET` | `/api/messages/:uid` | Cookie | Últimos 30 mensajes con el usuario `:uid` |
+| `GET` | `/api/messages/:uid` | Cookie | Last 30 messages with user `:uid` |
 
 **GET `/api/messages/:uid`**
 ```json
@@ -112,9 +112,9 @@ En login y registro exitosos el servidor establece la cookie `access_token` con 
   "messages": [
     {
       "id": "...",
-      "from": "<uid-remitente>",
-      "to": "<uid-destinatario>",
-      "message": "Hola!",
+      "from": "<sender-uid>",
+      "to": "<recipient-uid>",
+      "message": "Hello!",
       "createdAt": "2026-04-12T10:00:00Z",
       "updatedAt": "2026-04-12T10:00:00Z"
     }
@@ -124,41 +124,41 @@ En login y registro exitosos el servidor establece la cookie `access_token` con 
 
 ## Socket.IO
 
-El servidor Socket.IO corre en un proceso Netty separado en el **puerto 9092**.
+The Socket.IO server runs in a separate Netty process on **port 9092**.
 
-### Autenticación del handshake
+### Handshake Authentication
 
-La cookie no viaja a un puerto distinto, por lo que el cliente pasa el JWT como query param:
+The cookie does not travel to a different port, so the client passes the JWT as a query param:
 
 ```
 ws://localhost:9092?x-token=<jwt>
 ```
 
-Si el token es inválido, el servidor desconecta al cliente inmediatamente.
+If the token is invalid, the server disconnects the client immediately.
 
-### Eventos
+### Events
 
-| Dirección | Evento | Payload |
+| Direction | Event | Payload |
 |---|---|---|
-| Server → Clients | `user-list` | `UserDto[]` — lista completa de usuarios ordenada por estado online |
+| Server → Clients | `user-list` | `UserDto[]` — full user list sorted by online status |
 | Client → Server | `personal-message` | `{ from, to, message }` |
-| Server → Rooms | `personal-message` | `MessageDto` — emitido a las rooms del remitente y del destinatario |
+| Server → Rooms | `personal-message` | `MessageDto` — emitted to both the sender's and recipient's rooms |
 
-## Seguridad
+## Security
 
-- **XSS:** el JWT viaja en una cookie `HttpOnly`; JavaScript no puede leerla.
-- **CSRF:** la cookie usa `SameSite=Strict`; el navegador no la envía en peticiones cross-site.
-- **Contraseñas:** almacenadas con BCrypt (Spring Security).
-- **Sesiones:** stateless (JWT); Spring Security no mantiene sesión HTTP.
+- **XSS:** the JWT travels in an `HttpOnly` cookie; JavaScript cannot read it.
+- **CSRF:** the cookie uses `SameSite=Strict`; the browser does not send it on cross-site requests.
+- **Passwords:** stored with BCrypt (Spring Security).
+- **Sessions:** stateless (JWT); Spring Security does not maintain an HTTP session.
 
-## Estructura del proyecto
+## Project Structure
 
 ```
 src/main/java/com/chat/
 ├── config/
-│   ├── SecurityConfig.java      # Cadena de filtros, CORS, sesión stateless
-│   ├── SocketIOConfig.java      # Bean del servidor netty-socketio
-│   └── SocketIOLifecycle.java   # Start/stop del servidor con el contexto Spring
+│   ├── SecurityConfig.java      # Filter chain, CORS, stateless session
+│   ├── SocketIOConfig.java      # netty-socketio server bean
+│   └── SocketIOLifecycle.java   # Server start/stop tied to Spring context
 ├── controllers/
 │   ├── AuthController.java      # /api/login/**
 │   └── MessagesController.java  # /api/messages/**
@@ -170,15 +170,15 @@ src/main/java/com/chat/
 │   ├── PersonalMessagePayload.java
 │   └── UserDto.java
 ├── helpers/
-│   └── JwtHelper.java           # Generación y validación de JWT (JJWT)
+│   └── JwtHelper.java           # JWT generation and validation (JJWT)
 ├── middleware/
-│   └── JwtFilter.java           # Lee JWT de cookie o header x-token
+│   └── JwtFilter.java           # Reads JWT from cookie or x-token header
 ├── models/
-│   ├── User.java                # Colección MongoDB "users"
-│   └── Message.java             # Colección MongoDB "messages"
+│   ├── User.java                # MongoDB "users" collection
+│   └── Message.java             # MongoDB "messages" collection
 ├── repositories/
 │   ├── UserRepository.java
 │   └── MessageRepository.java
 └── websocket/
-    └── SocketHandler.java       # Eventos connect / disconnect / personal-message
+    └── SocketHandler.java       # connect / disconnect / personal-message events
 ```
