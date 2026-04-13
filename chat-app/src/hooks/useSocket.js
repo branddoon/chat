@@ -3,19 +3,22 @@ import { io } from 'socket.io-client';
 
 /**
  * Custom hook that manages a Socket.IO connection lifecycle.
- * Reads the JWT from localStorage and attaches it as a query param
- * so the server can authenticate the socket handshake.
+ *
+ * The token is received as a parameter (from AuthContext in-memory state) rather
+ * than being read from localStorage. This avoids the XSS token-theft vector while
+ * still allowing the socket server — which runs on a different port and therefore
+ * cannot receive cookies automatically — to authenticate the handshake.
  *
  * @param {string} serverPath - URL of the Socket.IO server.
+ * @param {string|null} token - JWT for the socket handshake, held only in memory.
  * @returns {{ socket, online, connectSocket, disconnectSocket }}
  */
-export const useSocket = (serverPath) => {
+export const useSocket = (serverPath, token) => {
     const [socket, setSocket]   = useState(null);
     const [online, setOnline]   = useState(false);
 
-    /** Opens a new socket connection authenticated with the stored token. */
+    /** Opens a new socket connection authenticated with the in-memory token. */
     const connectSocket = useCallback(() => {
-        const token      = localStorage.getItem('token');
         const newSocket  = io(serverPath, {
             transports: ['websocket'],
             autoConnect: true,
@@ -23,7 +26,7 @@ export const useSocket = (serverPath) => {
             query: { 'x-token': token },
         });
         setSocket(newSocket);
-    }, [serverPath]);
+    }, [serverPath, token]);
 
     /** Closes the current socket connection if one is open. */
     const disconnectSocket = useCallback(() => {

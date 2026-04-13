@@ -15,8 +15,8 @@ export const SocketContext = createContext();
  * @param {{ children: React.ReactNode }} props
  */
 export const SocketProvider = ({ children }) => {
-    const { socket, online, connectSocket, disconnectSocket } = useSocket('http://localhost:9092');
     const { auth }             = useContext(AuthContext);
+    const { socket, online, connectSocket, disconnectSocket } = useSocket('http://localhost:9092', auth.token);
     const { dispatch }         = useContext(ChatContext);
 
     // Connect the socket when the user logs in.
