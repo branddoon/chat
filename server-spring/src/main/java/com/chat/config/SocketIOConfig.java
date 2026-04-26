@@ -17,9 +17,13 @@ public class SocketIOConfig {
     @Value("${socketio.port:9092}")
     private int socketioPort;
 
+    @Value("${app.cors.allowed-origin:http://localhost:3000}")
+    private String allowedOrigin;
+
     /**
      * Creates and configures the {@link SocketIOServer} bean.
-     * CORS is set to {@code *} to accept connections from any origin.
+     * The allowed origin must be explicit (not {@code *}) so that the browser
+     * sends the {@code access_token} HttpOnly cookie during the WebSocket handshake.
      * The server is not started here; lifecycle management is handled by
      * {@link SocketIOLifecycle}.
      *
@@ -30,7 +34,7 @@ public class SocketIOConfig {
         com.corundumstudio.socketio.Configuration config =
                 new com.corundumstudio.socketio.Configuration();
         config.setPort(socketioPort);
-        config.setOrigin("*");
+        config.setOrigin(allowedOrigin);
         return new SocketIOServer(config);
     }
 }

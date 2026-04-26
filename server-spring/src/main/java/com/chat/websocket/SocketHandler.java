@@ -10,6 +10,7 @@ import com.chat.repositories.UserRepository;
 import com.corundumstudio.socketio.AckRequest;
 import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
+import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import java.util.List;
@@ -59,14 +60,14 @@ public class SocketHandler {
 
     /**
      * Handles a new socket connection.
-     * Reads the {@code x-token} query parameter, validates the JWT, marks the user
-     * online, joins the user's private room (named after their UID), and broadcasts
-     * the updated user list to all connected clients.
+     * Reads the JWT from the {@code access_token} HttpOnly cookie in the handshake
+     * headers, validates it, marks the user online, joins the user's private room
+     * (named after their UID), and broadcasts the updated user list to all clients.
      *
      * @param client the newly connected socket client
      */
     private void onConnect(SocketIOClient client) {
-        String token  = client.getHandshakeData().getSingleUrlParam("x-token");
+        String token    = resolveToken(client);
         String[] result = jwtHelper.verifyJWT(token);
 
         if (!"true".equals(result[0])) {
@@ -126,6 +127,23 @@ public class SocketHandler {
 
         server.getRoomOperations(payload.getTo()).sendEvent("personal-message", dto);
         server.getRoomOperations(payload.getFrom()).sendEvent("personal-message", dto);
+    }
+
+    /**
+     * Extracts the JWT from the {@code access_token} HttpOnly cookie sent in the
+     * WebSocket handshake request headers.
+     *
+     * @param client the connecting socket client
+     * @return the raw JWT string, or {@code null} if the cookie is absent
+     */
+    private String resolveToken(SocketIOClient client) {
+        String cookieHeader = client.getHandshakeData().getHttpHeaders().get("Cookie");
+        if (cookieHeader == null) return null;
+        return ServerCookieDecoder.STRICT.decode(cookieHeader).stream()
+                .filter(c -> "access_token".equals(c.name()))
+                .map(io.netty.handler.codec.http.cookie.Cookie::value)
+                .findFirst()
+                .orElse(null);
     }
 
     /**

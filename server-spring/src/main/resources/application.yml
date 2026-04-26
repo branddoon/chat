@@ -17,6 +17,9 @@ app:
   cookie:
     # Set to true in production (requires HTTPS). Use false for local HTTP development.
     secure: false
+  cors:
+    # Origin allowed for Socket.IO. Must be an explicit origin (not *) when cookies are used.
+    allowed-origin: http://localhost:3000
 
 logging:
   level:
