@@ -25,9 +25,6 @@ public class AuthResponse {
     /** MongoDB document ID of the authenticated user. */
     private String id;
 
-    /** Signed JWT for use in subsequent authenticated requests. */
-    private String token;
-
     /** Human-readable message; present on errors or token renewal. */
     private String msg;
 
@@ -37,11 +34,10 @@ public class AuthResponse {
      * @param email the user's email address
      * @param name  the user's display name
      * @param id    the user's MongoDB document ID
-     * @param token the signed JWT
      * @return a populated {@link AuthResponse} with {@code ok = true}
      */
-    public static AuthResponse success(String email, String name, String id, String token) {
-        return new AuthResponse(true, email, name, id, token, null);
+    public static AuthResponse success(String email, String name, String id) {
+        return new AuthResponse(true, email, name, id, null);
     }
 
     /**
@@ -51,6 +47,6 @@ public class AuthResponse {
      * @return an {@link AuthResponse} with {@code ok = false}
      */
     public static AuthResponse error(String msg) {
-        return new AuthResponse(false, null, null, null, null, msg);
+        return new AuthResponse(false, null, null, null, msg);
     }
 }

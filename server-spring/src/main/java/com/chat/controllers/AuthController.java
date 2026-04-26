@@ -120,7 +120,7 @@ public class AuthController {
             log.info("Finished user creating process...");
             setAuthCookie(response, token);
             return ResponseEntity.ok(
-                    AuthResponse.success(user.getEmail(), user.getName(), user.getId(), token));
+                    AuthResponse.success(user.getEmail(), user.getName(), user.getId()));
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
                     .body(AuthResponse.error("Please contact the administrator."));
@@ -154,7 +154,7 @@ public class AuthController {
             String token = jwtHelper.generateJWT(user.getId());
             setAuthCookie(response, token);
             return ResponseEntity.ok(
-                    AuthResponse.success(user.getEmail(), user.getName(), user.getId(), token));
+                    AuthResponse.success(user.getEmail(), user.getName(), user.getId()));
 
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
@@ -178,7 +178,7 @@ public class AuthController {
         String token = jwtHelper.generateJWT(uid);
         setAuthCookie(response, token);
         return ResponseEntity.ok(
-                new AuthResponse(true, user.getEmail(), user.getName(), user.getId(), token, "renew"));
+                new AuthResponse(true, user.getEmail(), user.getName(), user.getId(), "renew"));
     }
 
     /**
