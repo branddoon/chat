@@ -16,6 +16,7 @@ export const AppRouter = () => {
 
     // Verify the stored JWT on first render.
     useEffect(() => {
+        console.log("verifiying token...")
         verifyToken();
     }, [verifyToken]);
 

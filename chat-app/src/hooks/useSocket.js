@@ -4,29 +4,29 @@ import { io } from 'socket.io-client';
 /**
  * Custom hook that manages a Socket.IO connection lifecycle.
  *
- * The token is received as a parameter (from AuthContext in-memory state) rather
- * than being read from localStorage. This avoids the XSS token-theft vector while
- * still allowing the socket server — which runs on a different port and therefore
- * cannot receive cookies automatically — to authenticate the handshake.
+ * Authentication is handled automatically by the browser: the {@code access_token}
+ * HttpOnly cookie is attached to the WebSocket handshake request because the socket
+ * server (localhost:9092) is same-site with the React app (localhost:3000).
+ * {@code withCredentials: true} is required so that the socket CORS response header
+ * reflects the exact origin instead of {@code *}.
  *
  * @param {string} serverPath - URL of the Socket.IO server.
- * @param {string|null} token - JWT for the socket handshake, held only in memory.
  * @returns {{ socket, online, connectSocket, disconnectSocket }}
  */
-export const useSocket = (serverPath, token) => {
+export const useSocket = (serverPath) => {
     const [socket, setSocket]   = useState(null);
     const [online, setOnline]   = useState(false);
 
-    /** Opens a new socket connection authenticated with the in-memory token. */
+    /** Opens a new socket connection; the HttpOnly cookie authenticates the handshake. */
     const connectSocket = useCallback(() => {
         const newSocket  = io(serverPath, {
-            transports: ['websocket'],
-            autoConnect: true,
-            forceNew:    true,
-            query: { 'x-token': token },
+            transports:     ['websocket'],
+            autoConnect:    true,
+            forceNew:       true,
+            withCredentials: true,
         });
         setSocket(newSocket);
-    }, [serverPath, token]);
+    }, [serverPath]);
 
     /** Closes the current socket connection if one is open. */
     const disconnectSocket = useCallback(() => {

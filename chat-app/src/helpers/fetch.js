@@ -59,6 +59,8 @@ export const fetchWithToken = async (endPoint, data, method = 'GET') => {
     // callers (e.g. verifyToken) handle it as an unauthenticated response
     // instead of crashing.
     try {
+        console.log("Complete resp object from server...")
+        console.log(resp)
         return await resp.json();
     } catch {
         return { ok: false };

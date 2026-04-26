@@ -16,7 +16,7 @@ export const SocketContext = createContext();
  */
 export const SocketProvider = ({ children }) => {
     const { auth }             = useContext(AuthContext);
-    const { socket, online, connectSocket, disconnectSocket } = useSocket('http://localhost:9092', auth.token);
+    const { socket, online, connectSocket, disconnectSocket } = useSocket('http://localhost:9092');
     const { dispatch }         = useContext(ChatContext);
 
     // Connect the socket when the user logs in.

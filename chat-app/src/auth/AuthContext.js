@@ -104,7 +104,8 @@ export const AuthProvider = ({ children }) => {
      */
     const verifyToken = useCallback(async () => {
         const resp = await fetchWithToken('login/renew');
-        
+        console.log("Response from server...");
+        console.log(resp);
         if (resp.ok) {
             setAuth({
                 uid:      resp.id,
@@ -114,6 +115,8 @@ export const AuthProvider = ({ children }) => {
                 email:    resp.email,
                 token:    resp.token,
             });
+            console.log("Auth object...")
+            console.log(auth)
             return true;
         }
 
