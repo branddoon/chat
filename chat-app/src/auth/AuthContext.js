@@ -16,8 +16,7 @@ const initialState = {
     checking: true,   // true while the token renewal check is in flight
     logged:   false,
     name:     null,
-    email:    null,
-    token:    null,   // in-memory only — used for Socket.IO auth, not HTTP requests
+    email:    null
 };
 
 /**
@@ -56,8 +55,7 @@ export const AuthProvider = ({ children }) => {
                 checking: false,
                 logged:   true,
                 name:     resp.name,
-                email:    resp.email,
-                token:    resp.token,
+                email:    resp.email
             });
             return true;
         }
@@ -84,8 +82,7 @@ export const AuthProvider = ({ children }) => {
                 checking: false,
                 logged:   true,
                 name:     resp.name,
-                email:    resp.email,
-                token:    resp.token,
+                email:    resp.email
             });
             return true;
         }
@@ -104,24 +101,19 @@ export const AuthProvider = ({ children }) => {
      */
     const verifyToken = useCallback(async () => {
         const resp = await fetchWithToken('login/renew');
-        console.log("Response from server...");
-        console.log(resp);
         if (resp.ok) {
             setAuth({
                 uid:      resp.id,
                 checking: false,
                 logged:   true,
                 name:     resp.name,
-                email:    resp.email,
-                token:    resp.token,
+                email:    resp.email
             });
-            console.log("Auth object...")
-            console.log(auth)
             return true;
         }
 
         // Cookie absent, expired, or invalid.
-        setAuth({ uid: null, checking: false, logged: false, name: null, email: null, token: null });
+        setAuth({ uid: null, checking: false, logged: false, name: null, email: null });
         return false;
     }, []);
 
@@ -134,7 +126,7 @@ export const AuthProvider = ({ children }) => {
     const logout = async () => {
         await fetchWithToken('login/logout', {}, 'POST');
         dispatch({ type: types.closeSession });
-        setAuth({ checking: false, logged: false, uid: null, name: null, email: null, token: null });
+        setAuth({ checking: false, logged: false, uid: null, name: null, email: null});
     };
 
     return (
