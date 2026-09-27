@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spring-server
+  template:
+    metadata:
+      labels:
+        app: spring-server
+    spec:
+      containers:
+        - name: spring-server
+          image: server-spring:1.0.1
+          imagePullPolicy: Never
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: ws
+              containerPort: 9092
+          env:
+            - name: SPRING_DATA_MONGODB_URI
+              value: mongodb://192.168.195.181:27017/chatdb

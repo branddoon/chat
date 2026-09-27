@@ -4,8 +4,7 @@ server:
 spring:
   data:
     mongodb:
-      uri:
-        mongodb: //127.0.0.1:27017/chatdb
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb://192.168.195.181:27017/chatdb}
 
 jwt:
   key: SecretKey2f1da39bd7d94a418d0c2f3b8399a6cfSystemBloga8648fc460774d1a9e1876bacc438142Last0119cbf26eae4e11b5504072d63d4ce2
@@ -19,7 +18,7 @@ app:
     secure: false
   cors:
     # Origin allowed for Socket.IO. Must be an explicit origin (not *) when cookies are used.
-    allowed-origin: http://localhost:3000
+    allowed-origin: http://192.168.195.181:3000
 
 logging:
   level:
