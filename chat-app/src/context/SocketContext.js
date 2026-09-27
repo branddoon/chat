@@ -4,6 +4,7 @@ import { AuthContext } from '../auth/AuthContext';
 import { ChatContext } from './chat/ChatContext';
 import { types } from '../types/types';
 import { scrollToBottomAnimated } from '../helpers/scrollToBottom';
+const baseUrl = process.env.REACT_APP_SOCKET_URL;
 
 /** React context that exposes the socket instance and online status. */
 export const SocketContext = createContext();
@@ -16,7 +17,7 @@ export const SocketContext = createContext();
  */
 export const SocketProvider = ({ children }) => {
     const { auth }             = useContext(AuthContext);
-    const { socket, online, connectSocket, disconnectSocket } = useSocket('http://localhost:9092');
+    const { socket, online, connectSocket, disconnectSocket } = useSocket(baseUrl);
     const { dispatch }         = useContext(ChatContext);
 
     // Connect the socket when the user logs in.
